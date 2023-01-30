@@ -2,7 +2,7 @@ from aiogram import types
 import view
 import model
 from global_variable import candies
-import handlers
+
 
 game_status = False
 player_name = ''

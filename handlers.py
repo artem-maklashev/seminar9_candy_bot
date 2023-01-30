@@ -63,12 +63,5 @@ async def game_command(message: types.Message, state: FSMContext):
         return
     await state.finish()
     await message.answer('Основное меню', reply_markup=get_keyboard())
-    current_state = await state.get_state()
-    if current_state in GameStates:
-        if current_state == 'GameStates:coin_choice':
-            print('coin_choice')
-        elif current_state == 'GameStates:game_process':
-            print('game_process')
-        else:
-            print('None')
+    
   
