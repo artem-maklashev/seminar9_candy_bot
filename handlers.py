@@ -18,7 +18,7 @@ class GameStates(StatesGroup):
 users_dict = {}
 
 async def rules(message: types.Message):
-    await message.answer('По умолчанию установлено количество конфет равное 150, можно изменить введя команду "/set 100", где 100 устанавливаемое значение.')
+    await message.answer('По умолчанию установлено количество конфет равное 150, можно изменить введя команду "/set 100" после жеребьевки, где 100 устанавливаемое значение.')
     await message.answer(f'На столе лежат конфеты. Игроки ходят по очереди.'
                          f'За один ход разрешается брать от 1 до 28 конфет. Кто забрал последние'
                          f'конфеты со стола, тот забирает все конфеты.\n{message.from_user.first_name}, бросим жребий.')
@@ -50,13 +50,17 @@ async def game_command(message: types.Message):
 @dp.message_handler(commands=['set'], state=GameStates.coin_choice)
 async def game_command(message: types.Message):
     await log(message)
-    global player
+    name = message.from_user.full_name
     id = message.from_user.id
     total = int(message.text.split()[1])
-    await player.set_total(total) 
+    player = User(name, total)
     global users_dict
-    users_dict[id] = player   
-    await message.answer(f'Установлено количество конфет {total}', reply_markup=get_keyboard())
+    users_dict[id] = player    
+    #await player.set_total(total)     
+    await message.answer(f'Установлено количество конфет {total}', reply_markup=get_coin_side())
+    await GameStates.coin_choice.set()
+    
+    
 
 @dp.message_handler(Text(equals='Начать игру', ignore_case=True), state='*')
 async def start_game(message: types.Message):
@@ -64,16 +68,19 @@ async def start_game(message: types.Message):
     await GameStates.coin_choice.set()
     await rules(message)
     await message.answer('Выбери орел или решка', reply_markup=get_coin_side())
-
+    
 
 @dp.message_handler(Text(equals=['Орел', 'Решка']), state=GameStates.coin_choice)
 async def coin_side(message: types.Message):
     id = message.from_user.id
     name = message.from_user.full_name
     global player
-    player = User(name, candies)
     global users_dict
-    users_dict[id] = player
+    player = users_dict.get(id, 'None')
+    if player == 'None':
+        player = User(name, candies)
+        users_dict[id] = player
+       
     await log(message)
     await GameStates.game_process.set()
     side = message.text
